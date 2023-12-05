@@ -74,5 +74,3 @@ dbGetQuery(soccer_con, "SELECT count(gameID)
 
 ## Make sure to close the connection when you're done to conserve memory
 DBI::dbDisconnect(soccer_con)
-
-
