@@ -67,10 +67,82 @@ class(df_teams)
 
 
 ## Create SQL queries
+
+# we can use SELECT to select certain variables and 
+# FROM to choose a specific table in the database
+dbGetQuery(soccer_con, "SELECT shooterID
+                        FROM shots") %>%
+  head()
+
+# we can use * in the SELECT statement to select ALL variables in a table
+dbGetQuery(soccer_con, "SELECT *
+                        FROM shots") %>%
+  head()
+
+# we can use functions on variables in the SELECT statement
+dbGetQuery(soccer_con, "SELECT count(gameID)
+                        FROM shots") 
+
+# we can use a WHERE statement to get obs that match a specific condition
 dbGetQuery(soccer_con, "SELECT count(gameID)
                         FROM shots
                         WHERE shotResult = 'OwnGoal'")
 
+# we can use an ORDER BY statement to order observations
+dbGetQuery(soccer_con, "SELECT gameID, shotType
+                        FROM shots
+                        WHERE shotResult = 'OwnGoal'
+                        ORDER BY shooterID desc") %>%
+  head()
+
+# we can use a HAVING statement, similar to WHERE however it needs to be used 
+# with a GROUPBY statment
+dbGetQuery(soccer_con, "SELECT gameID
+                        FROM shots
+                        WHERE shotResult = 'OwnGoal'
+                        GROUP BY gameID
+                        HAVING shotType = 'LeftFoot'") %>%
+  head()
+
+
+## Joining Tables
+
+# there are several kinds of joins that allow us to join tables and extract 
+# information that is stored separately
+# * insert SQL joins picture *
+
+# in order to join tables, we need what's called a primary key
+# this key will allow us to relate the tables and join them
+# primary key can uniquely identify an observation
+# foreign key establishes a relationship with another table's primary key 
+
+# we can use a left join 
+# find the num of goals a team scored when they scored an own goal in the game
+dbGetQuery(soccer_con, "SELECT count(homeGoals)
+                        FROM games
+                        LEFT JOIN shots
+                        ON games.gameID = shots.gameID
+                        WHERE shotResult = 'OwnGoal'") %>%
+  head()
+
+# an inner join
+dbGetQuery(soccer_con, "SELECT count(homeGoals)
+                        FROM games
+                        INNER JOIN shots
+                        ON games.gameID = shots.gameID
+                        WHERE shotResult = 'OwnGoal'") %>%
+  head()
+
+# inspect the data and try joining multiple tables
+dbGetQuery(soccer_con, "SELECT DISTINCT name 
+                        FROM players
+                        JOIN shots
+                        ON players.playerID = shots.shooterID
+                        JOIN games
+                        ON shots.gameID = games.gameID
+                        WHERE season = '2015'") %>%
+  head()
+# players who took shots in 2015
 
 ## Make sure to close the connection when you're done to conserve memory
 DBI::dbDisconnect(soccer_con)
