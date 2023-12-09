@@ -2,6 +2,15 @@ library(DBI)  # Contains functions for interacting with database
 library(RSQL)  # Generate and process SQL queries in R
 library(RSQLite)  # Can create an in-memory SQL database
 library(tidyverse)
+library(tidymodels)
+library(themis)
+library(ggplot2)
+library(corrplot)
+library(kknn)
+library(ranger)
+library(randomForest)
+library(xgboost)
+library(vip)
 
 ## Load each file in 
 
@@ -143,6 +152,127 @@ dbGetQuery(soccer_con, "SELECT DISTINCT name
                         WHERE season = '2015'") %>%
   head()
 # players who took shots in 2015
+
+
+## Modeling
+
+# We can practice modeling and using queries 
+# create three models to predict whether or not a team will win a game
+
+# create query to get table with relevant data
+mdl_data <- dbGetQuery(soccer_con, "SELECT *
+                        FROM games
+                        FULL OUTER JOIN teamstats
+                        ON games.gameID = teamstats.gameID") %>%
+  collect()
+
+mdl_data <- mdl_data %>%
+  select(c(36,39:50))
+
+mdl_data$result <- factor(mdl_data$result, levels = c("L", "W", "D"), 
+                          labels = c(0,1,2))
+
+# analyze correlation between variables
+mdl_data %>% 
+  select(where(is.numeric)) %>% 
+  cor() %>% 
+  corrplot(type = 'lower', diag = FALSE, 
+           method = 'color')
+
+# set seed for reproducibility
+set.seed(1208)
+
+# check for class imbalances
+mdl_data %>%
+  ggplot() +
+  geom_bar(aes(x = result, fill = result), color = "black") +
+  theme_minimal()
+
+# split data into training, testing, and create 5 folds for cv
+mdl_split <- initial_split(mdl_data, strata = "result", prop = 0.8)
+
+mdl_train <- training(mdl_split)
+mdl_test <- testing(mdl_split)
+
+mdl_folds <- vfold_cv(mdl_train, strata = "result", v = 5)
+
+# create recipe
+mdl_recipe <- recipe(
+  result ~ goals + shots + shotsOnTarget + deep + corners, 
+  data = mdl_train) %>% 
+  step_upsample(result) %>%
+  step_dummy(all_nominal_predictors()) %>%  # dummy-code all nominal preds
+  step_normalize(all_numeric_predictors())  # normalize preds
+
+prep(mdl_recipe) %>% bake(new_data = mdl_train)  # prep and bake recipe
+
+### K-Nearest Neighbors
+
+# K-nearest neighbors is a model that uses information about the observations 
+# closest to our new observations to classify them. It can be used for both 
+# regression and classification problems, but we will use it for classification. 
+# The model gets information about the "k" nearest data points and classifies 
+# new data points based on the majority.
+
+# create knn model
+knn_model <- nearest_neighbor(neighbors=tune()) %>% # tune n
+  set_engine("kknn") %>% 
+  set_mode("classification")
+
+# create knn workflow
+knn_wflow <- workflow() %>%
+  add_model(knn_model) %>%
+  add_recipe(mdl_recipe)
+
+# create grid to tune neighbors
+knn_tune_grid <- grid_regular(neighbors(range = c(1,15000)),
+                              levels = 5)
+
+# tune neighbors
+tune_knn <- tune_grid(
+  knn_wflow,
+  resamples = mdl_folds,
+  grid = knn_tune_grid
+)
+
+# write results to rds file to reduce knit time
+write_rds(tune_knn, file = '../data/tuning/knn_tune.rds')
+
+# read outputted rds file
+tune_knn <- read_rds('../data/tuning/knn_tune.rds')
+
+# visualize model performance by number of neighbors
+autoplot(tune_knn)
+
+# manually inspect model performance by number of neighbors
+collect_metrics(tune_knn)
+
+# select best performing model based on roc auc
+best_knn <- select_best(tune_knn,
+                        metric = "roc_auc",
+                        neighbors
+)
+
+# finalize workflow
+final_knn_wf <- finalize_workflow(rainbow_knn_wflow,
+                                  best_knn)
+
+# fit model to training data
+rb_final_knn <- fit(final_knn_wf, 
+                    data = rainbow_train)
+
+# evaluate performance
+knn_auc <- augment(rb_final_knn, new_data = rainbow_train) %>%
+  roc_auc(haswon, .pred_0)
+knn_acc <- augment(rb_final_knn, new_data = rainbow_train) %>%
+  accuracy(haswon, .pred_class)
+knn_train_results <- bind_rows(knn_auc, knn_acc) %>%
+  tibble() %>% mutate(metric = c("roc auc", "acc")) %>%
+  select(metric, .estimate)
+
+# display
+knn_train_results
+
 
 ## Make sure to close the connection when you're done to conserve memory
 DBI::dbDisconnect(soccer_con)
