@@ -358,5 +358,15 @@ combined_train_results <- rbind(knn_train_results,
 # display
 combined_train_results
 
+##### IF WE NEED TO DELETE TABLES
+
+# dbRemoveTable(soccer_con, "appearances")
+# dbRemoveTable(soccer_con, "games")
+# dbRemoveTable(soccer_con, "leagues")
+# dbRemoveTable(soccer_con, "players")
+# dbRemoveTable(soccer_con, "shots")
+# dbRemoveTable(soccer_con, "teams")
+# dbRemoveTable(soccer_con, "teamstats")
+
 ## Make sure to close the connection when you're done to conserve memory
 DBI::dbDisconnect(soccer_con)
