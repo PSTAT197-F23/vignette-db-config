@@ -14,7 +14,11 @@ Objectives: create a SQL database with multiple csv files; practice writing
 SQL queries; fit knn and extreme gradient boosting models to queried data.
 
 # Databases
-Talk about databases and our soccer csv files.
+A database is a large collection of data that can be accessed and edited by numerous people simultaneously, and this flexibility is convenient for all scales of projects. The main benefits include the efficient storage and retrieval of data, constantly updated data when connected straight to the source, the allowance of multiple concurrent users, and enhanced data privacy. Because of these capabilities, they are commonly used by large businesses.
+
+We will be working with a relational database in this vignette, which is a database comprising one or more tables (or "relations") of interconnected data. The data within each can be joined with others through merging techniques to create one's own table of just the desired data for data analysis, modeling, etc. 
+
+The data used in this vignette is a "Football Database" from Kaggle that contains football-related data (player and team statistics) covering the Top 5 leagues in Europe from 2014 to 2020. It contains 7 separate csv files that will act as our database's relations: appearances, games, leagues, players, shots, teams, teamstats. There are both continuous and categorical variables in each table that can be leveraged for data exploration and model fitting later in the vignette.
 
 # Configuring a Database
 
