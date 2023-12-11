@@ -12,9 +12,12 @@ This vignette, created as a final project for PSTAT197A in Fall 2023, provides a
 
 ## Repository Contents
 
-- **data/**: Contains the seven pre-processed CSV files (appearances.csv, games.csv, leagues.csv, players.csv, shots.csv, teams.csv, teamstats.csv) comprising the European Football Database.
-- **scripts/**: Includes R scripts for (connecting to the database, adding relations, writing tables, and executing queries).
+- **data**: Contains the seven pre-processed CSV files (appearances.csv, games.csv, leagues.csv, players.csv, shots.csv, teams.csv, teamstats.csv) comprising the European Football Database.
+- **images**: Contains images produced in the files. 
+- **scripts**: Includes R scripts for connecting to the database, adding relations, writing tables, and executing queries.
 - **README.md**: This file providing an overview of the vignette, contributors, abstract, repository contents, references, and instructions for use and contribution.
+- **vignette_db_config.html**: Rendered version of the vignette, offering a user-friendly view of the step-by-step guide on configuring a database and executing queries in R with European football data.
+- **vignette_db_config.qmd**: This file contains the R Markdown source code for the vignette. 
 
 ## Reference List
 
