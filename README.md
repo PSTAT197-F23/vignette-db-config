@@ -19,7 +19,7 @@ This vignette, created as a final project for PSTAT197A in Fall 2023, provides a
 ## Reference List
 
 1.  [Kaggle Football Database](https://www.kaggle.com/datasets/technika148/football-database?select=appearances.csv)
-2.  
+2.  [Working With SQL Databases From R: Introduction & Connecting To Databases](https://www.youtube.com/watch?v=F4HP3CXijC8)
 
 ## Instructions for Use
 
